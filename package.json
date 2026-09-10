@@ -1,4 +1,5 @@
 {
+  "$schema": "https://json.schemastore.org/package.json",
   "name": "z-ecoimpact",
   "version": "1.0.0",
   "description": "Z Ecoimpact Consulting LDA website (Node.js + EJS)",
