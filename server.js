@@ -12,16 +12,19 @@ const FileSync = require("lowdb/adapters/FileSync");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+app.set("trust proxy", 1);
 
 // Gmail requires an app password for SMTP when two-step verification is enabled.
 // Leaving these values unset keeps the server startable, but contact delivery
 // will report a configuration error instead of pretending an email was sent.
-const mailTransport = process.env.MAIL_USER && process.env.MAIL_APP_PASSWORD
+const mailTransport = process.env.MAIL_HOST && process.env.MAIL_USER && process.env.MAIL_PASSWORD
   ? nodemailer.createTransport({
-      service: "gmail",
+      host: process.env.MAIL_HOST,
+      port: Number(process.env.MAIL_PORT || 465),
+      secure: process.env.MAIL_SECURE !== "false",
       auth: {
         user: process.env.MAIL_USER,
-        pass: process.env.MAIL_APP_PASSWORD
+        pass: process.env.MAIL_PASSWORD
       }
     })
   : null;
@@ -51,9 +54,9 @@ if (useMySQL) {
     mysqlDb = require(path.join(__dirname, "db", "mysql"));
     console.log("MySQL enabled for products");
   } catch (err) {
-    // Fail gracefully: log and continue using lowdb
-    console.error("Failed to load MySQL helper:", err);
-    mysqlDb = null;
+    // Production must not silently write to the local JSON fallback when MySQL was requested.
+    console.error("Failed to load MySQL helper:", err.message || err);
+    throw err;
   }
 }
 
@@ -64,9 +67,14 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(
   session({
-    secret: "z-ecoimpact-session-secret",
+    secret: process.env.SESSION_SECRET || "development-only-change-me",
     resave: false,
-    saveUninitialized: true
+    saveUninitialized: false,
+    cookie: {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production"
+    }
   })
 );
 
@@ -160,6 +168,35 @@ function cartTotal(cart) {
   return cart.reduce((sum, item) => sum + item.price * item.qty, 0);
 }
 
+function requireAdmin(req, res, next) {
+  if (req.session.isAdmin) return next();
+  res.redirect("/admin/login");
+}
+
+app.get("/admin/login", (req, res) => {
+  if (req.session.isAdmin) return res.redirect("/admin");
+  res.render("admin-login", { error: null });
+});
+
+app.post("/admin/login", (req, res) => {
+  const username = String(req.body.username || "");
+  const password = String(req.body.password || "");
+  const validCredentials = process.env.ADMIN_USER && process.env.ADMIN_PASSWORD
+    && username === process.env.ADMIN_USER
+    && password === process.env.ADMIN_PASSWORD;
+
+  if (!validCredentials) {
+    return res.status(401).render("admin-login", { error: "Invalid administrator credentials" });
+  }
+
+  req.session.isAdmin = true;
+  res.redirect("/admin");
+});
+
+app.post("/admin/logout", requireAdmin, (req, res) => {
+  req.session.destroy(() => res.redirect("/admin/login"));
+});
+
 // Home route: prefer MySQL when available, otherwise use lowdb JSON data.
 app.get("/", async (req, res) => {
   if (mysqlDb) {
@@ -231,7 +268,7 @@ app.get("/cart", (req, res) => {
 });
 
 // Admin view: show products from MySQL when enabled, otherwise from lowdb.
-app.get("/admin", async (req, res) => {
+app.get("/admin", requireAdmin, async (req, res) => {
   if (mysqlDb) {
     try {
       const products = await mysqlDb.getProducts();
@@ -247,7 +284,7 @@ app.get("/admin", async (req, res) => {
 
 // Add product: when MySQL is enabled, insert into MySQL (if not exists).
 // Otherwise the product is added to the local lowdb JSON store.
-app.post("/admin/products", async (req, res) => {
+app.post("/admin/products", requireAdmin, async (req, res) => {
   const { id, name, description, price, image, featured } = req.body;
   if (mysqlDb) {
     try {
@@ -279,7 +316,7 @@ app.post("/admin/products", async (req, res) => {
 
 // Delete product: attempt deletion in MySQL first when enabled, else remove
 // from the local lowdb JSON store.
-app.post("/admin/products/:id/delete", async (req, res) => {
+app.post("/admin/products/:id/delete", requireAdmin, async (req, res) => {
   if (mysqlDb) {
     try {
       await mysqlDb.deleteProductById(req.params.id);
@@ -294,7 +331,7 @@ app.post("/admin/products/:id/delete", async (req, res) => {
 });
 
 // Toggle featured flag: keep behavior identical whether using MySQL or lowdb.
-app.post("/admin/products/:id/feature", async (req, res) => {
+app.post("/admin/products/:id/feature", requireAdmin, async (req, res) => {
   if (mysqlDb) {
     try {
       const product = await mysqlDb.getProductById(req.params.id);
@@ -357,10 +394,13 @@ app.get("/api/cart", (req, res) => {
   res.json({ items: req.session.cart, total: cartTotal(req.session.cart) });
 });
 
-app.post("/api/cart/add", (req, res) => {
+// The route is async because MySQL product lookups return promises.
+app.post("/api/cart/add", async (req, res) => {
   const { productId, qty } = req.body;
   const quantity = Math.max(1, Number(qty || 1));
-  const product = db.get("products").find({ id: productId }).value();
+  const product = mysqlDb
+    ? await mysqlDb.getProductById(productId)
+    : db.get("products").find({ id: productId }).value();
   if (!product) {
     return res.status(404).json({ message: "Product not found" });
   }
@@ -451,13 +491,17 @@ app.post("/api/checkout", async (req, res) => {
   res.json({ message: "Purchase complete", purchaseId, total });
 });
 
-app.get("/api/purchases/:id", (req, res) => {
+app.get("/api/purchases/:id", async (req, res) => {
   const id = Number(req.params.id);
-  const purchase = db.get("purchases").find({ id }).value();
+  const purchase = mysqlDb
+    ? await mysqlDb.getPurchaseById(id)
+    : db.get("purchases").find({ id }).value();
   if (!purchase) {
     return res.status(404).json({ message: "Purchase not found" });
   }
-  const items = db.get("purchase_items").filter({ purchase_id: id }).value();
+  const items = mysqlDb
+    ? purchase.items
+    : db.get("purchase_items").filter({ purchase_id: id }).value();
   res.json({ purchase, items });
 });
 
@@ -496,7 +540,7 @@ app.post("/api/chat", async (req, res) => {
     // Use the configured mailbox as the sender and the visitor as replyTo;
     // this avoids Gmail rejecting messages that impersonate the visitor.
     await mailTransport.sendMail({
-      from: process.env.MAIL_USER,
+      from: process.env.MAIL_FROM || process.env.MAIL_USER,
       to: contactRecipient,
       replyTo: email,
       subject: `New contact message from ${name}`,
@@ -525,7 +569,17 @@ app.use((err, req, res, next) => {
   res.status(500).send("Server error");
 });
 
-initDb();
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+async function startServer() {
+  initDb();
+  if (mysqlDb) {
+    await mysqlDb.testConnection();
+  }
+  app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+  });
+}
+
+startServer().catch((err) => {
+  console.error("Application startup failed:", err.message || err);
+  process.exitCode = 1;
 });

@@ -1,10 +1,17 @@
 const mysql = require('mysql2/promise');
 
+// cPanel database credentials must be supplied through the Node.js app environment.
+const requiredEnvironment = ['DB_HOST', 'DB_USER', 'DB_PASSWORD', 'DB_DATABASE'];
+const missingEnvironment = requiredEnvironment.filter((name) => !process.env[name]);
+if (missingEnvironment.length > 0) {
+  throw new Error(`Missing MySQL environment variables: ${missingEnvironment.join(', ')}`);
+}
+
 const pool = mysql.createPool({
-  host: process.env.DB_HOST || 'localhost',
-  user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || 'admin',
-  database: process.env.DB_DATABASE || 'z_ecoimpact',
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_DATABASE,
   waitForConnections: true,
   connectionLimit: 10
 });

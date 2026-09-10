@@ -1,6 +1,3 @@
--- Schema for z_ecoimpact
-CREATE DATABASE IF NOT EXISTS z_ecoimpact;
-USE z_ecoimpact;
 
 CREATE TABLE IF NOT EXISTS products (
   id VARCHAR(50) PRIMARY KEY,
@@ -9,7 +6,7 @@ CREATE TABLE IF NOT EXISTS products (
   price DECIMAL(10,2) NOT NULL DEFAULT 0,
   image VARCHAR(255),
   featured TINYINT(1) DEFAULT 0
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS purchases (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -18,7 +15,7 @@ CREATE TABLE IF NOT EXISTS purchases (
   address TEXT,
   total DECIMAL(10,2),
   created_at DATETIME
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS purchase_items (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -29,7 +26,7 @@ CREATE TABLE IF NOT EXISTS purchase_items (
   qty INT,
   image VARCHAR(255),
   FOREIGN KEY (purchase_id) REFERENCES purchases(id) ON DELETE CASCADE
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS contacts (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -37,11 +34,6 @@ CREATE TABLE IF NOT EXISTS contacts (
   email VARCHAR(255),
   message TEXT,
   created_at DATETIME
-);
-
--- Run these checks after all tables have been created.
-SHOW TABLES;
-
-SELECT COUNT(*) AS product_count FROM products;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 

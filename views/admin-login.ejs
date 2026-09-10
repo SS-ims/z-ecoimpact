@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+<%- include('partials/head', { title: 'Admin login — Z Ecoimpact' }) %>
+<body>
+  <main class="main">
+    <section class="section">
+      <h1>Admin login</h1>
+      <% if (error) { %><p class="contact-result"><%= error %></p><% } %>
+      <form method="POST" action="/admin/login" class="card product-form-card">
+        <input required name="username" autocomplete="username" placeholder="Username" class="form-field">
+        <input required name="password" type="password" autocomplete="current-password" placeholder="Password" class="form-field">
+        <button class="btn btn-primary" type="submit">Sign in</button>
+      </form>
+    </section>
+  </main>
+</body>
+</html>
