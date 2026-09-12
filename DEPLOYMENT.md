@@ -17,7 +17,7 @@ The canonical application is the Express/EJS site started by `server.js`. In cPa
 
 ## Configure the Node app
 
-In **Setup Node.js App**, set the application root, domain, startup file `server.js`, and the Node version supported by the host. Add every variable from `.env.example` in the application's **Environment Variables** panel. Use the names supplied by cPanel for `DB_USER` and `DB_DATABASE`.
+In **Setup Node.js App**, set the application root, domain, startup file `server.js`, and the Node version supported by the host. Add every variable from `.env.example` in the application's **Environment Variables** panel. Use the names supplied by cPanel for `DB_USER` and `DB_DATABASE`. For email, set `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`, and `CONTACT_RECIPIENT`; do not upload the real SMTP password in a project file.
 
 For cPanel email, use the SMTP settings shown in **Email Accounts > Connect Devices**. Usually the mailbox host is `mail.your-domain`, port `465` with `MAIL_SECURE=true`, or port `587` with `MAIL_SECURE=false`. `MAIL_USER` and `MAIL_FROM` should be the domain mailbox, while `CONTACT_RECIPIENT` is the address that receives notifications.
 

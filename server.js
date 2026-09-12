@@ -14,21 +14,26 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 app.set("trust proxy", 1);
 
-// Gmail requires an app password for SMTP when two-step verification is enabled.
-// Leaving these values unset keeps the server startable, but contact delivery
-// will report a configuration error instead of pretending an email was sent.
-const mailTransport = process.env.MAIL_HOST && process.env.MAIL_USER && process.env.MAIL_PASSWORD
+// Accept both the MAIL_* names used by this app and the SMTP_* names commonly
+// provided by cPanel. The MAIL_* values take priority when both are present.
+const mailHost = process.env.MAIL_HOST || process.env.SMTP_HOST;
+const mailPort = process.env.MAIL_PORT || process.env.SMTP_PORT;
+const mailSecure = process.env.MAIL_SECURE || process.env.SMTP_SECURE;
+const mailUser = process.env.MAIL_USER || process.env.SMTP_USER;
+const mailPassword = process.env.MAIL_PASSWORD || process.env.SMTP_PASS;
+const mailTransport = mailHost && mailUser && mailPassword
   ? nodemailer.createTransport({
-      host: process.env.MAIL_HOST,
-      port: Number(process.env.MAIL_PORT || 465),
-      secure: process.env.MAIL_SECURE !== "false",
+      host: mailHost,
+      port: Number(mailPort || 465),
+      secure: mailSecure !== "false",
       auth: {
-        user: process.env.MAIL_USER,
-        pass: process.env.MAIL_PASSWORD
+        user: mailUser,
+        pass: mailPassword
       }
     })
   : null;
-const contactRecipient = process.env.CONTACT_RECIPIENT || "zecoimpactconsulting@gmail.com";
+const contactRecipient = process.env.CONTACT_RECIPIENT || "zaqueuaugusto94@gmail.com";
+const mailFrom = process.env.MAIL_FROM || process.env.SMTP_FROM || mailUser;
 
 const dataDir = path.join(__dirname, "data");
 if (!fs.existsSync(dataDir)) {
@@ -540,7 +545,7 @@ app.post("/api/chat", async (req, res) => {
     // Use the configured mailbox as the sender and the visitor as replyTo;
     // this avoids Gmail rejecting messages that impersonate the visitor.
     await mailTransport.sendMail({
-      from: process.env.MAIL_FROM || process.env.MAIL_USER,
+      from: mailFrom,
       to: contactRecipient,
       replyTo: email,
       subject: `New contact message from ${name}`,

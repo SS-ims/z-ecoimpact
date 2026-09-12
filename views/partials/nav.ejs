@@ -1,7 +1,9 @@
 <nav class="side-nav" id="side-nav" aria-label="Main">
-  <div class="logo">
-    <div class="mini-mark">Z</div>
-    <div class="brand-text">Ecoimpact</div>
+  <div class="logo logo-stack">
+    <!-- Keep asset URLs rooted at the domain so they work on every Express route. -->
+    <img src="/images/logo_clean_transparent.png" alt="Z Ecoimpact logo" class="brand-logo">
+    <img src="/images/brand.jpeg" alt="Ecoimpact brand" class="brand-image">
+    <img src="/images/consulting.jpeg" alt="Consulting" class="brand-image consulting-image">
   </div>
   <a href="/" class="<%= activePage === 'home' ? 'active' : '' %>">Início</a>
   <a href="/about" class="<%= activePage === 'about' ? 'active' : '' %>">Sobre nós</a>
