@@ -39,12 +39,19 @@ document.addEventListener('DOMContentLoaded', function () {
   function setNavState(isOpen) {
     if (!sideNav) return;
     const mobile = window.innerWidth <= 900;
-    sideNav.classList.toggle('hidden', !isOpen || !mobile);
-    sideNav.classList.toggle('open', isOpen && mobile);
+    const mobileNavOpen = isOpen && mobile;
+    // Keep the navigation visible on desktop; only hide it while the mobile menu is closed.
+    sideNav.classList.toggle('hidden', !isOpen && mobile);
+    sideNav.classList.toggle('open', mobileNavOpen);
     if (main) {
       main.classList.toggle('full', !isOpen && mobile);
     }
-    overlay.classList.toggle('visible', isOpen && mobile);
+    overlay.classList.toggle('visible', mobileNavOpen);
+    // Show a close icon while the mobile navigation is open and the hamburger otherwise.
+    if (toggle) {
+      toggle.textContent = mobileNavOpen ? '×' : '☰';
+      toggle.setAttribute('aria-label', mobileNavOpen ? 'Fechar menu' : 'Abrir menu');
+    }
   }
 
   if (toggle) {
