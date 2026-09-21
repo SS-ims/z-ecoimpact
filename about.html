@@ -12,7 +12,8 @@
     <div class="eco-site">
         <nav class="side-nav" id="side-nav" aria-label="Main">
             <div class="logo logo-stack">
-                <img src="images/logo_clean_transparent.png" alt="Z Ecoimpact logo" class="brand-logo">
+                <!-- Use a root-relative URL so the logo also loads when the page is served from a nested route. -->
+                <img src="/images/logo_clean_transparent.png" alt="Z Ecoimpact logo" class="brand-logo" loading="eager" decoding="async">
                 <img src="images/brand.jpeg" alt="Ecoimpact brand" class="brand-image">
                 <img src="images/consulting.jpeg" alt="Consulting" class="brand-image consulting-image">
             </div>
@@ -31,8 +32,8 @@
 
             <section class="eco-hero hero-centered">
                 <div class="eco-brand-copy eco-brand-stack">
-                    <img src="images/brand.jpeg" alt="Z Ecoimpact" class="hero-brand-image">
-                    <img src="images/consulting.jpeg" alt="Consulting" class="hero-brand-image hero-brand-image--small">
+                    <img src="/images/brand.jpeg" alt="Z Ecoimpact" class="hero-brand-image" loading="lazy" decoding="async">
+                    <img src="/images/consulting.jpeg" alt="Consulting" class="hero-brand-image hero-brand-image--small" loading="lazy" decoding="async">
                 </div>
             </section>
 

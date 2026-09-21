@@ -577,7 +577,13 @@ app.use((err, req, res, next) => {
 async function startServer() {
   initDb();
   if (mysqlDb) {
-    await mysqlDb.testConnection();
+    try {
+      await mysqlDb.testConnection();
+    } catch (err) {
+      // Keep the website available with lowdb while cPanel credentials or schema are repaired.
+      console.error("MySQL unavailable; using lowdb fallback:", err.message || err);
+      mysqlDb = null;
+    }
   }
   app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
