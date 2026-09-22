@@ -50,7 +50,7 @@ document.addEventListener('DOMContentLoaded', function () {
     overlay.classList.toggle('visible', mobileNavOpen);
     // Show a close icon while the mobile navigation is open and the hamburger otherwise.
     if (toggle) {
-      toggle.textContent = mobileNavOpen ? '×' : '☰';
+      toggle.textContent = mobileNavOpen ? 'X' : '☰';
       toggle.setAttribute('aria-label', mobileNavOpen ? 'Fechar menu' : 'Abrir menu');
       toggle.setAttribute('aria-expanded', String(mobileNavOpen));
     }

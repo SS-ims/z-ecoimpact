@@ -856,6 +856,9 @@ a {
 
   .menu-toggle {
     display: block;
+    /* Keep the close control above the open drawer so it remains clickable. */
+    position: relative;
+    z-index: 31;
   }
 
   .service-grid {
@@ -871,6 +874,8 @@ a {
   .eco-topbar {
     padding-left: 14px;
     padding-right: 14px;
+    /* Keep the toggle's stacking context above the open navigation drawer. */
+    z-index: 31;
   }
 
   .eco-hero,
