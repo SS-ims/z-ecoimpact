@@ -27,6 +27,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const sideNav = document.querySelector('.side-nav');
   const main = document.querySelector('.main');
   const toggle = document.getElementById('menu-toggle');
+  const isMobileViewport = () => window.innerWidth <= 900;
 
   let overlay = document.getElementById('nav-overlay');
   if (!overlay) {
@@ -38,7 +39,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   function setNavState(isOpen) {
     if (!sideNav) return;
-    const mobile = window.innerWidth <= 900;
+    const mobile = isMobileViewport();
     const mobileNavOpen = isOpen && mobile;
     // Keep the navigation visible on desktop; only hide it while the mobile menu is closed.
     sideNav.classList.toggle('hidden', !isOpen && mobile);
@@ -51,6 +52,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (toggle) {
       toggle.textContent = mobileNavOpen ? '×' : '☰';
       toggle.setAttribute('aria-label', mobileNavOpen ? 'Fechar menu' : 'Abrir menu');
+      toggle.setAttribute('aria-expanded', String(mobileNavOpen));
     }
   }
 
@@ -60,6 +62,9 @@ document.addEventListener('DOMContentLoaded', function () {
       setNavState(isOpen);
     });
   }
+
+  // Apply the same initial state on every page, including pages restored from browser history.
+  setNavState(sideNav?.classList.contains('open') ?? false);
 
   overlay.addEventListener('click', () => setNavState(false));
 
@@ -73,7 +78,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   window.addEventListener('resize', () => {
     const shouldOpen = sideNav?.classList.contains('open');
-    setNavState(shouldOpen && window.innerWidth <= 900);
+    setNavState(shouldOpen && isMobileViewport());
   });
 
   // ---------------------------

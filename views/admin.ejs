@@ -6,7 +6,7 @@
     <%- include('partials/nav', { activePage: '' }) %>
 
     <main class="main">
-      <div class="topbar"><button id="menu-toggle" class="menu-toggle">☰</button><div class="brand">Admin</div></div>
+      <div class="topbar"><button type="button" id="menu-toggle" class="menu-toggle" aria-label="Abrir menu" aria-expanded="false">☰</button><div class="brand">Admin</div></div>
       <form method="POST" action="/admin/logout" class="inline-form"><button class="btn btn-quote" type="submit">Log out</button></form>
 
       <section class="section">

@@ -6,7 +6,7 @@
   <%- include('partials/nav', { activePage: 'products' }) %>
 
   <main class="main">
-    <div class="topbar"><button id="menu-toggle" class="menu-toggle">☰</button><div class="brand">Product</div></div>
+    <div class="topbar"><button type="button" id="menu-toggle" class="menu-toggle" aria-label="Abrir menu" aria-expanded="false">☰</button><div class="brand">Product</div></div>
 
     <section class="section">
       <% if (!product) { %>
